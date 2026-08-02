@@ -23,13 +23,13 @@ Launcher pro **Neverwinter Nights: Enhanced Edition**, který po spuštění př
    game log chat all
    ```
 
-2. Obsah repozitáře nakopírujte do adresáře:
+2. Obsah archivu nakopírujte do adresáře:
 
    ```text
    Dokumenty\Neverwinter Nights\
    ```
 
-   > Nic z tohoto repozitáře nekopírujte přímo do instalačního adresáře hry.
+   > Nic z tohoto archivu nekopírujte přímo do instalačního adresáře hry.
 
 3. Otevřete `EQ.cmd` v textovém editoru a u proměnné `var_path` nastavte cestu k adresáři instalace hry, který končí `bin\win32`.
 
