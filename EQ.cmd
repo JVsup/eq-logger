@@ -159,18 +159,29 @@ DEL Porovnani.sed
 :: pokud nechcete mit zalohy tga, zakomentujte "7za..." a "move *.7z..." radky
 
 if %var_screenshot%==0 goto jump6
-SET xdate=%date:~-4,4%-%date:~-7,2%-%date:~-10,2%_%TIME:~0,2%-%TIME:~3,2%-%TIME:~-5,2%
+SET "xdate="
+FOR /F "delims=" %%I IN ('powershell.exe -NoLogo -NoProfile -NonInteractive -Command "Get-Date -Format yyyy-MM-dd_HH-mm-ss"') DO SET "xdate=%%I"
+if not defined xdate (
+    echo.
+    echo ^> CHYBA: Nepodarilo se zjistit datum a cas. Screenshoty zustaly nezmenene.
+    EXIT /B 1
+)
 cls
 ECHO.
 echo ^> Konvertuji se screenshoty - nezavirejte okno a vyckejte...
 
-CD %~dp0/screenshots/
+CD /D "%~dp0screenshots"
 if not exist *.tga goto end
+if not exist "%xdate%\" md "%xdate%"
+if not exist "%xdate%\" (
+    echo.
+    echo ^> CHYBA: Nepodarilo se vytvorit adresar "%xdate%". Screenshoty zustaly nezmenene.
+    EXIT /B 1
+)
 gm mogrify -format jpg *.tga
-7za a -r "%xdate%".7z *.tga >nul
-md %xdate%
-move *.jpg "%~dp0/screenshots/%xdate%"
-move *.7z "%~dp0/screenshots/%xdate%"
+7za a -r "%xdate%.7z" *.tga >nul
+move *.jpg "%~dp0screenshots\%xdate%"
+move "%xdate%.7z" "%~dp0screenshots\%xdate%"
 del /F /Q *.tga
 :jump6
 :end
