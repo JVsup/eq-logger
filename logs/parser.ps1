@@ -415,84 +415,96 @@ Set-Position
 
 
 # POMOCNE PROMENNE
-$cesta = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
-$logfile = "$cesta\nwclientLog1.txt"
-$extfile = "$cesta\parser.log"
-$date = Get-Date -UFormat %d-%m
-$utokzasah1 = "$charname.*útočí.*zásah"
-$utokzasah2 = "útočí.*$charname.*zásah"
-$zranil1 = "$charname.*zranil"
-$zranil2 = "zranil.*$charname"
-$touch1 = "$charname.*zkouší.*zásah"
-$touch2 = "zkouší.*$charname.*zásah"
-$touch3 = "$charname.*zkouší.*odolal"
-$touch4 = "zkouší.*$charname.*odolal"
-$song = "$charname zpívá.$"
-$nemoc1 = "Ulevilo se ti a cítíš se lépe.$"
-$nemoc2 = "Je ti zle od žaludku a bolí tě hlava.$"
-$nemoc3 = "$charname.*omdlel"
-$nemoc4 = "Strašně tě svědí hlava a chceš se všude drbat.$"
-$nemoc5 = "Začínáš se nekontrolovatelně třást a chvět."
-$nemoc6 = "Bolí tě hlava a je ti malátně a špatně od žaludku.$"
-$nemoc7 = "Je ti nesmírně zle od žaludku.$"
-$nemoc8 = "\] Necítíš se dobře a bolí tě v krku.$"
-$odpocinek = "\] Konec odpočinku$"
-$connect1 = "se připojil jako"
-$connect2 = "se odpojil jako"
-$use1 = "Tuto dovednost nemůžeš použít následujících"
-$pvp1 = "tě teď nemá v oblibě!$"
-$item1 = "Ztracený předmět:"
-$item2 = "Získaný předmět:"
-$make1 = "Výroba.*se povedla"
-$make2 = "Výroba.*se nepovedla"
+$scriptDirectory = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+$inputLogPath = Join-Path -Path $scriptDirectory -ChildPath 'nwclientLog1.txt'
+$outputLogPath = Join-Path -Path $scriptDirectory -ChildPath 'parser.log'
+$logDate = Get-Date -UFormat %d-%m
 
-# BEZI NWMAIN?
-#Wait-ForProcess -Name nwmain
-Write-Host 'NALEZENO!'
-Write-Host 'Nwmain bezi, poustim cteni logu za 10 vterin...'
-#Start-Sleep -Seconds 10
+$filterPatterns = @(
+    # Obecne herni zpravy
+    'používá'
+    'NEMOC'
+    ': Soustředění :'
+    ': Výsměch :'
+    'Otevírání zámků'
+    'Odstranění pasti'
+    'kritická chyba'
+    'Spustil jsi past.$'
+    'POSMRTKY'
+    'kouzlo.*selhalo'
+    'vyléčeno'
+    'zabil'
+    'zbývá'
+    'Záchranný'
+    'záchranný'
+    'na vůli'
+    'sesílá '
+    'Imunita na mysl'
+    'Imunita na sražení'
+    'odolat kouzlu'
+    'vytahuje malou hůlku'
+    'Rozptyl kouzla '
+    'Zinterferovalo ti'
+    'prudk'
+    'oškliv'
+    'Získané zkušenosti: \d\d'
 
-cls
-Set-Position
-Write-Host 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-Write-Host 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-Write-Host 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    # Utoky, zraneni a dotykove utoky
+    "$charname.*útočí.*zásah"
+    "útočí.*$charname.*zásah"
+    "$charname.*zranil"
+    "zranil.*$charname"
+    "$charname.*zkouší.*zásah"
+    "zkouší.*$charname.*zásah"
+    "$charname.*zkouší.*odolal"
+    "zkouší.*$charname.*odolal"
+    "$charname zpívá.$"
 
+    # Nemoci a odpocinek
+    'Ulevilo se ti a cítíš se lépe.$'
+    'Je ti zle od žaludku a bolí tě hlava.$'
+    "$charname.*omdlel"
+    'Strašně tě svědí hlava a chceš se všude drbat.$'
+    'Začínáš se nekontrolovatelně třást a chvět.'
+    'Bolí tě hlava a je ti malátně a špatně od žaludku.$'
+    'Je ti nesmírně zle od žaludku.$'
+    '\] Necítíš se dobře a bolí tě v krku.$'
+    '\] Konec odpočinku$'
 
-# SAMOTNE VYCITANI
-Get-Content $logfile -Wait |
-  % {$_.replace("[CHAT WINDOW TEXT] ","")} |
-  % {$_.replace("zkouší","zkouší ")} |
-  % {$_.replace("$delname","")} |
-  % {$_ -replace "\[...........", "[$date "} |
-  % {$_ -replace "\s\s+", " "} |
-  % {$_ -replace ".*používá zvláštní schopnost předmětu.$", ""} |
-  % {$_ -replace ".*Používá se brnění.štít..*", ""} |
-  % {$_ -replace ".*několik předmětů. které dávají bonus k.*", ""} |
-  % {$_ -replace ".*Zbraň se používá jako .* zbraň.*", ""} |
-  % {$_ -replace ".*Už ti ho zbývá jenom \d\d+", ""} |
-  % {$_ -replace ".*Do toho všeho je ti strašně zle.$*", "[UMRELI TE HAHA] A TED MAS POSMRTKY HOHOHO!"} |
-  % {$_ -replace "\] Cítíš se divně.$", "] Cítíš se divně - MÁŠ NEMOC!"} |
-  Select-String -Pattern 'používá','NEMOC',': Soustředění :',': Výsměch :','Otevírání zámků','Odstranění pasti','kritická chyba','Spustil jsi past.$','POSMRTKY','kouzlo.*selhalo','vyléčeno','zabil','zbývá','Záchranný','záchranný','na vůli','sesílá ','Imunita na mysl','Imunita na sražení','odolat kouzlu','vytahuje malou hůlku','Rozptyl kouzla ','Zinterferovalo ti', 'prudk', 'oškliv', 'Získané zkušenosti: \d\d',$utokzasah1,$utokzasah2,$zranil1,$zranil2,$touch1,$touch2,$touch3,$touch4,$song,$nemoc1,$nemoc2,$nemoc3,$nemoc4,$nemoc5,$nemoc6,$nemoc7,$nemoc8,$odpocinek,$connect1,$connect2,$use1,$pvp1,$item1,$item2,$make1,$make2 |
-  Tee-Object -Append -FilePath $extfile |
-  Out-HostColored @{ 
+    # Pripojeni, pouzivani, predmety a vyroba
+    'se připojil jako'
+    'se odpojil jako'
+    'Tuto dovednost nemůžeš použít následujících'
+    'tě teď nemá v oblibě!$'
+    'Ztracený předmět:'
+    'Získaný předmět:'
+    'Výroba.*se povedla'
+    'Výroba.*se nepovedla'
+)
+
+$colorRules = @{
+    # Dotykove utoky a bezne utoky
     "^.*$charname.*zkouší.*zásah.*" = 'green'
     "^.*zkouší.*$charname.*zásah.*" = 'white,red'
     "^.*$charname.*zkouší.*odolal.*" = 'green,darkgray'
     "^.*zkouší.*$charname.*odolal.*" = 'red'
     "^.*$charname.*útočí.*" = 'green'
     "^.*útočí.*$charname.*" = 'red'
+
+    # Zbyvajici body a urovne
     "^.*$charname.*\d\d\d bodů zbývá.*" = 'yellow'
     "^.*$charname.*\s[3-9]\d bodů zbývá.*" = 'yellow'
     "^.*$charname.*\s[1-2][0-9] bodů zbývá.*" = 'black,yellow'
     "^(?!.*$charname).*bodů zbývá.*" = 'white,darkred'
-    "^.*$charname.*\s[0-9] bodů zbývá.*" = 'black,yellow' 
+    "^.*$charname.*\s[0-9] bodů zbývá.*" = 'black,yellow'
     "^.*$charname.*\s\d\d úrovní zbývá.*" = 'black,yellow'
     "^.*$charname.*\s[0-9] úrovní zbývá.*" = 'black,yellow'
     "^(?!.*$charname).*úrovní zbývá.*" = 'white,darkred'
+
+    # Kouzla, imunity a odolani
     "^.*] $charname.*sesílá.*" = 'white'
     "^(?!.*$charname).*sesílá.*" = 'red,white'
-    "^.*kouzlo zrušeno.*" = 'black,magenta'
+    '^.*kouzlo zrušeno.*' = 'black,magenta'
     '^.*] Rozptyl kouzla.*$' = 'black,magenta'
     '^.*hůlku.*' = 'black,magenta'
     '^.*Zinterferovalo.*' = 'black,magenta'
@@ -504,35 +516,75 @@ Get-Content $logfile -Wait |
     "^(?!.*$charname).*odolal kouzlu.*" = 'cyan,red'
     "^.*$charname.*kouzlo pohlceno.*" = 'cyan'
     "^(?!.*$charname).*kouzlo pohlceno.*" = 'cyan,red'
+
+    # Zabiti, leceni a pasti
     "^.*$charname.*zabil.*" = 'black,green'
     "^.*zabil.*$charname.*" = 'black,red'
     "^(?!.*$charname).*zabil.*" = 'gray'
-	"^(?!.*$charname).*Získané zkušenosti:.*" = 'gray'
-    ".*Vyléčeno.*" = 'yellow'
-    ".*POSMRTKY.*" = 'red,black'
-    ".*jsi past.*" = 'red'
+    "^(?!.*$charname).*Získané zkušenosti:.*" = 'gray'
+    '.*Vyléčeno.*' = 'yellow'
+    '.*POSMRTKY.*' = 'red,black'
+    '.*jsi past.*' = 'red'
     "^.*$charname.*nemožný.*" = 'red,black'
-    ".*kritická chyba.*" = 'red,black'
+    '.*kritická chyba.*' = 'red,black'
+
+    # Pisne, nemoci a odpocinek
     "^(?!.*$charname).*zpívá.$" = 'magenta'
-    ".*střelivo.*" = 'black,yellow'
-	".*NEMOC.*" = 'black,red'
-	".*prudk.*" = 'black,red'
-	".*oškliv.*" = 'black,red'
-    ".*omdlel.*" = 'black,red'
-    ".*svědí.*" = 'red'
-    ".*nekontrolovatelně.*" = 'red'
-    ".*od žaludku.*" = 'red'
-    ".*necítíš.*" = 'red'
-    ".*ulevilo se ti.*" = 'green'
-	".*\] Konec odpočinku.*" = 'black,gray'
+    '.*střelivo.*' = 'black,yellow'
+    '.*NEMOC.*' = 'black,red'
+    '.*prudk.*' = 'black,red'
+    '.*oškliv.*' = 'black,red'
+    '.*omdlel.*' = 'black,red'
+    '.*svědí.*' = 'red'
+    '.*nekontrolovatelně.*' = 'red'
+    '.*od žaludku.*' = 'red'
+    '.*necítíš.*' = 'red'
+    '.*ulevilo se ti.*' = 'green'
+    '.*\] Konec odpočinku.*' = 'black,gray'
+
+    # Pouzivani, pripojeni, predmety a vyroba
     ".*$charname.*používá.*" = 'gray'
-	"^(?!.*$charname).*používá.*" = 'red'
-    ".*připojil.*" = 'yellow'
-    ".*odpojil.*" = 'yellow'
-    ".*použít.*" = 'red'
-	".*oblibě.*" = 'black,red'
-    ".*Ztracený předmět:.*" = 'red'
-    ".*Získaný předmět:.*" = 'green'
-    ".*Výroba.*se povedla.*" = 'black,green'
-    ".*Výroba.*se nepovedla.*" = 'black,red'
-  }
+    "^(?!.*$charname).*používá.*" = 'red'
+    '.*připojil.*' = 'yellow'
+    '.*odpojil.*' = 'yellow'
+    '.*použít.*' = 'red'
+    '.*oblibě.*' = 'black,red'
+    '.*Ztracený předmět:.*' = 'red'
+    '.*Získaný předmět:.*' = 'green'
+    '.*Výroba.*se povedla.*' = 'black,green'
+    '.*Výroba.*se nepovedla.*' = 'black,red'
+}
+
+
+Write-Host 'NALEZENO!'
+Write-Host 'Nwmain bezi, poustim cteni logu za 10 vterin...'
+
+Clear-Host
+Set-Position
+
+$separator = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+for ($i = 0; $i -lt 3; $i++) {
+    Write-Host $separator
+}
+
+
+# SAMOTNE VYCITANI
+Get-Content -Path $inputLogPath -Wait |
+    ForEach-Object {
+        $line = $_.Replace('[CHAT WINDOW TEXT] ', '')
+        $line = $line.Replace('zkouší', 'zkouší ')
+        $line = $line.Replace($delname, '')
+        $line = $line -replace '\[...........', "[$logDate "
+        $line = $line -replace '\s\s+', ' '
+        $line = $line -replace '.*používá zvláštní schopnost předmětu.$', ''
+        $line = $line -replace '.*Používá se brnění.štít..*', ''
+        $line = $line -replace '.*několik předmětů. které dávají bonus k.*', ''
+        $line = $line -replace '.*Zbraň se používá jako .* zbraň.*', ''
+        $line = $line -replace '.*Už ti ho zbývá jenom \d\d+', ''
+        $line = $line -replace '.*Do toho všeho je ti strašně zle.$*', '[UMRELI TE HAHA] A TED MAS POSMRTKY HOHOHO!'
+        $line = $line -replace '\] Cítíš se divně.$', '] Cítíš se divně - MÁŠ NEMOC!'
+        $line
+    } |
+    Select-String -Pattern $filterPatterns |
+    Tee-Object -Append -FilePath $outputLogPath |
+    Out-HostColored -PatternColorMap $colorRules
