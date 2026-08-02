@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="EasyRP-windows/eq_ico_1024.png" alt="Logo Equilibrie" width="180">
+  <img src="docs/eq_ico_1024.png" alt="Logo Equilibrie" width="180">
 </p>
 
 # EQ Launcher a Logger pro NWN:EE
