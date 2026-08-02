@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out tagged revision
+        uses: actions/checkout@v6
+
+      - name: Build release archive
+        id: package
+        shell: bash
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          safe_tag="${TAG_NAME//\//-}"
+          archive="eq-logger-${safe_tag}.zip"
+
+          git archive \
+            --format=zip \
+            --output="$archive" \
+            HEAD \
+            -- \
+            EQ.cmd \
+            EasyRP-windows \
+            logs \
+            screenshots
+
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+
+      - name: Verify release archive
+        shell: bash
+        env:
+          ARCHIVE: ${{ steps.package.outputs.archive }}
+        run: |
+          set -euo pipefail
+
+          unzip -tqq "$ARCHIVE"
+          mapfile -t entries < <(unzip -Z1 "$ARCHIVE")
+
+          if (( ${#entries[@]} == 0 )); then
+            echo "Release archive is empty." >&2
+            exit 1
+          fi
+
+          invalid=0
+          for entry in "${entries[@]}"; do
+            case "$entry" in
+              EQ.cmd|EasyRP-windows/|EasyRP-windows/*|logs/|logs/*|screenshots/|screenshots/*)
+                ;;
+              *)
+                echo "Unexpected archive entry: $entry" >&2
+                invalid=1
+                ;;
+            esac
+          done
+
+          if (( invalid != 0 )); then
+            exit 1
+          fi
+
+          for required in EQ.cmd EasyRP-windows/ logs/ screenshots/; do
+            found=0
+            for entry in "${entries[@]}"; do
+              if [[ "$entry" == "$required" ]]; then
+                found=1
+                break
+              fi
+            done
+
+            if (( found == 0 )); then
+              echo "Required archive entry is missing: $required" >&2
+              exit 1
+            fi
+          done
+
+      - name: Publish GitHub release
+        shell: bash
+        env:
+          ARCHIVE: ${{ steps.package.outputs.archive }}
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          gh release create "$TAG_NAME" "$ARCHIVE" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --generate-notes \
+            --title "$TAG_NAME"

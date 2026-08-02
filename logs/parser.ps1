@@ -441,7 +441,10 @@ $connect1 = "se připojil jako"
 $connect2 = "se odpojil jako"
 $use1 = "Tuto dovednost nemůžeš použít následujících"
 $pvp1 = "tě teď nemá v oblibě!$"
-
+$item1 = "Ztracený předmět:"
+$item2 = "Získaný předmět:"
+$make1 = "Výroba.*se povedla"
+$make2 = "Výroba.*se nepovedla"
 
 # BEZI NWMAIN?
 #Wait-ForProcess -Name nwmain
@@ -470,7 +473,7 @@ Get-Content $logfile -Wait |
   % {$_ -replace ".*Už ti ho zbývá jenom \d\d+", ""} |
   % {$_ -replace ".*Do toho všeho je ti strašně zle.$*", "[UMRELI TE HAHA] A TED MAS POSMRTKY HOHOHO!"} |
   % {$_ -replace "\] Cítíš se divně.$", "] Cítíš se divně - MÁŠ NEMOC!"} |
-  Select-String -Pattern 'používá','NEMOC',': Soustředění :',': Výsměch :','Otevírání zámků','Odstranění pasti','kritická chyba','Spustil jsi past.$','POSMRTKY','kouzlo.*selhalo','vyléčeno','zabil','zbývá','Záchranný','záchranný','na vůli','sesílá ','Imunita na mysl','Imunita na sražení','odolat kouzlu','vytahuje malou hůlku','Rozptyl kouzla ','Zinterferovalo ti', 'prudk', 'oškliv', 'Získané zkušenosti: \d\d',$utokzasah1,$utokzasah2,$zranil1,$zranil2,$touch1,$touch2,$touch3,$touch4,$song,$nemoc1,$nemoc2,$nemoc3,$nemoc4,$nemoc5,$nemoc6,$nemoc7,$nemoc8,$odpocinek,$connect1,$connect2,$use1,$pvp1 |
+  Select-String -Pattern 'používá','NEMOC',': Soustředění :',': Výsměch :','Otevírání zámků','Odstranění pasti','kritická chyba','Spustil jsi past.$','POSMRTKY','kouzlo.*selhalo','vyléčeno','zabil','zbývá','Záchranný','záchranný','na vůli','sesílá ','Imunita na mysl','Imunita na sražení','odolat kouzlu','vytahuje malou hůlku','Rozptyl kouzla ','Zinterferovalo ti', 'prudk', 'oškliv', 'Získané zkušenosti: \d\d',$utokzasah1,$utokzasah2,$zranil1,$zranil2,$touch1,$touch2,$touch3,$touch4,$song,$nemoc1,$nemoc2,$nemoc3,$nemoc4,$nemoc5,$nemoc6,$nemoc7,$nemoc8,$odpocinek,$connect1,$connect2,$use1,$pvp1,$item1,$item2,$make1,$make2 |
   Tee-Object -Append -FilePath $extfile |
   Out-HostColored @{ 
     "^.*$charname.*zkouší.*zásah.*" = 'green'
@@ -528,4 +531,8 @@ Get-Content $logfile -Wait |
     ".*odpojil.*" = 'yellow'
     ".*použít.*" = 'red'
 	".*oblibě.*" = 'black,red'
-    }
+    ".*Ztracený předmět:.*" = 'red'
+    ".*Získaný předmět:.*" = 'green'
+    ".*Výroba.*se povedla.*" = 'green'
+    ".*Výroba.*se nepovedla.*" = 'red'
+  }
