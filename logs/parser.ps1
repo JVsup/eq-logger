@@ -533,6 +533,6 @@ Get-Content $logfile -Wait |
 	".*oblibě.*" = 'black,red'
     ".*Ztracený předmět:.*" = 'red'
     ".*Získaný předmět:.*" = 'green'
-    ".*Výroba.*se povedla.*" = 'green'
-    ".*Výroba.*se nepovedla.*" = 'red'
+    ".*Výroba.*se povedla.*" = 'black,green'
+    ".*Výroba.*se nepovedla.*" = 'black,red'
   }
